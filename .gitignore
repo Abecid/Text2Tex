@@ -3,3 +3,7 @@ outputs/
 data/objaverse/
 
 scripts/__pycache__/
+
+*.pth
+
+mathutils-3.3.0
