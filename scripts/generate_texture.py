@@ -470,6 +470,8 @@ if __name__ == "__main__":
         start_time = time.time()
         for view_idx in range(args.update_steps):
             print("=> processing view {}...".format(view_idx))
+            mesh = xray_meshes[0]
+            faces = xray_mesh.faces_packed()
             
             # 2.1. render and build masks
 
