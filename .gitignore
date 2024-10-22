@@ -7,3 +7,7 @@ scripts/__pycache__/
 *.pth
 
 mathutils-3.3.0
+
+.dist
+
+__pycache__/
