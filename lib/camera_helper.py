@@ -126,7 +126,8 @@ def init_principle_viewpoints(
     sector_list,
     view_punishments,
     use_shapenet=False,
-    use_objaverse=False
+    use_objaverse=False,
+    hits=1
 ):
 
     if use_shapenet:
@@ -136,7 +137,7 @@ def init_principle_viewpoints(
         pre_azim_list = [v for v in VIEWPOINTS[key]["azim"]]
         pre_sector_list = [v for v in VIEWPOINTS[key]["sector"]]
 
-        num_principle = 10
+        num_principle = 10 * hits
         pre_dist_list = [dist_list[0] for _ in range(num_principle)]
         pre_view_punishments = [0 for _ in range(num_principle)]
 
@@ -147,11 +148,11 @@ def init_principle_viewpoints(
         pre_azim_list = [v for v in VIEWPOINTS[key]["azim"]]
         pre_sector_list = [v for v in VIEWPOINTS[key]["sector"]]
 
-        num_principle = 10
+        num_principle = 10 * hits
         pre_dist_list = [dist_list[0] for _ in range(num_principle)]
         pre_view_punishments = [0 for _ in range(num_principle)]
     else:
-        num_principle = 6
+        num_principle = 6 * hits
         pre_elev_list = [v for v in VIEWPOINTS[num_principle]["elev"]]
         pre_azim_list = [v for v in VIEWPOINTS[num_principle]["azim"]]
         pre_sector_list = [v for v in VIEWPOINTS[num_principle]["sector"]]
