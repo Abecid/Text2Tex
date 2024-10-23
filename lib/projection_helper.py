@@ -152,7 +152,7 @@ def select_viewpoint(selected_view_ids, view_punishments,
 @torch.no_grad()
 def build_backproject_mask(mesh, faces, verts_uvs, 
     cameras, reference_image, faces_per_pixel, 
-    image_size, uv_size, device):
+    image_size, uv_size, device, textures_idx=None):
     # construct pixel UVs
     renderer_scaled = init_renderer(cameras,
         shader=init_soft_phong_shader(
@@ -165,7 +165,9 @@ def build_backproject_mask(mesh, faces, verts_uvs,
     fragments_scaled = renderer_scaled.rasterizer(mesh)
 
     # get UV coordinates for each pixel
-    faces_verts_uvs = verts_uvs[faces.textures_idx]
+    if textures_idx is None:
+        textures_idx = faces.textures_idx
+    faces_verts_uvs = verts_uvs[textures_idx]
 
     pixel_uvs = interpolate_face_attributes(
         fragments_scaled.pix_to_face, fragments_scaled.bary_coords, faces_verts_uvs
@@ -306,6 +308,7 @@ def build_similarity_texture_cache_for_all_views(meshes, faces, verts_uvs,
             if hits > 1:
                 mesh = meshes[j]
                 faces = mesh.faces_packed()
+                textures_idx = mesh.textures.faces_uvs_packed()
             else:
                 mesh = meshes
             cameras, _, _, _, similarity_tensor, _, _ = render_one_view(mesh,
@@ -314,7 +317,7 @@ def build_similarity_texture_cache_for_all_views(meshes, faces, verts_uvs,
 
             similarity_texture_cache[i] = build_backproject_mask(mesh, faces, verts_uvs, 
                 cameras, transforms.ToPILImage()(similarity_tensor[0, :, :, 0]).convert("RGB"), faces_per_pixel,
-                image_size_scaled, uv_size, device)
+                image_size_scaled, uv_size, device, textures_idx=textures_idx)
 
     return similarity_texture_cache
 
