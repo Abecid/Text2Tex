@@ -124,17 +124,17 @@ class RaycastingImaging:
         return ray_indexes, points, mesh_face_indices
 
 class XRayMesh:
-    def __init__(self, mesh, cameras, target_size=1536, channels=3, device='cuda', max_hits=2, remove_backface_hits=True, sampling_mode='nearest'):
+    def __init__(self, mesh, cameras, texture_size=1536, channels=3, device='cuda', max_hits=2, remove_backface_hits=True, sampling_mode='nearest'):
         self.mesh = mesh
-        self.cameras = cameras
-        self.target_size = target_size
+        self.target_size = (texture_size,texture_size)
         self.channels = channels
         self.device = device
         self.max_hits = max_hits
         self.remove_backface_hits = remove_backface_hits
         self.sampling_mode = sampling_mode
-
-        self.generate_occluded_geometry(mesh, cameras)
+        
+        self.set_cameras(cameras)
+        self.generate_occluded_geometry()
     
     def set_cameras(self, camera_poses, centers=None, scale=None):
         elev = torch.FloatTensor(camera_poses[0])

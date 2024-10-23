@@ -143,7 +143,7 @@ def init_args():
         help="the angle between the vector from the object to the camera and the vertical plane")
     
     # xray parameters
-    parser.add_argument("--hits", type=int, default=4,
+    parser.add_argument("--hits", type=int, default=2,
         help="the number of hit planes to use for ray casting and inpainting")
 
     args = parser.parse_args()
@@ -280,13 +280,13 @@ if __name__ == "__main__":
     )
     
     camera_poses = [pre_elev_list, pre_azim_list, pre_dist_list]
-    xray_mesh = XRayMesh(mesh, camera_poses, device=DEVICE)
+    xray_mesh = XRayMesh(mesh, camera_poses, device=DEVICE, max_hits=args.hits, texture_size=args.uv_size)
     xray_meshes = xray_mesh.occ_mesh
 
     # start generation
     print("=> start generating texture...")
     start_time = time.time()
-    for hit in args.hits:
+    for hit in range(args.hits):
         print("=> processing hit {}...".format(hit))
         for view_idx in range(NUM_PRINCIPLE):
             print("=> processing view {}...".format(view_idx))
@@ -308,7 +308,7 @@ if __name__ == "__main__":
                 keep_mask_image, update_mask_image, generate_mask_image, 
                 keep_mask_tensor, update_mask_tensor, generate_mask_tensor, all_mask_tensor, quad_mask_tensor,
             ) = render_one_view_and_build_masks(dist, elev, azim, 
-                view_idx*hit, view_idx*hit, view_punishments, # => actual view idx and the sequence idx 
+                view_idx*(hit+1), view_idx*(hit+1), view_punishments, # => actual view idx and the sequence idx 
                 pre_similarity_texture_cache, exist_texture,
                 xray_mesh, faces, new_verts_uvs,
                 args.image_size, args.fragment_k,
@@ -318,7 +318,7 @@ if __name__ == "__main__":
 
             # 1.2. generate missing region
             # NOTE first view still gets the mask for consistent ablations
-            if args.no_repaint and view_idx != 0:
+            if args.no_repaint and (view_idx != 0 and hit != 0):
                 actual_generate_mask_image = Image.fromarray((np.ones_like(np.array(generate_mask_image)) * 255.).astype(np.uint8))
             else:
                 actual_generate_mask_image = generate_mask_image
@@ -336,7 +336,7 @@ if __name__ == "__main__":
             # 1.2.2 back-project and create texture
             # NOTE projection mask = generate mask
             init_texture, project_mask_image, exist_texture = backproject_from_image(
-                mesh, faces, new_verts_uvs, cameras, 
+                xray_mesh, faces, new_verts_uvs, cameras, 
                 generate_image, generate_mask_image, generate_mask_image, init_texture, exist_texture, 
                 args.image_size * args.render_simple_factor, args.uv_size, args.fragment_k,
                 DEVICE
