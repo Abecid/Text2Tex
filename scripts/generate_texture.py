@@ -272,16 +272,16 @@ if __name__ == "__main__":
     pre_azim_list = azim_list[:NUM_PRINCIPLE]
     pre_sector_list = sector_list[:NUM_PRINCIPLE]
     pre_view_punishments = view_punishments[:NUM_PRINCIPLE*args.hits]
-
-    pre_similarity_texture_cache = build_similarity_texture_cache_for_all_views(mesh, faces, new_verts_uvs,
-        pre_dist_list, pre_elev_list, pre_azim_list,
-        args.image_size, args.image_size * args.render_simple_factor, args.uv_size, args.fragment_k,
-        DEVICE
-    )
     
     camera_poses = [pre_elev_list, pre_azim_list, pre_dist_list]
     xray_mesh = XRayMesh(mesh, camera_poses, device=DEVICE, max_hits=args.hits, texture_size=args.uv_size)
     xray_meshes = xray_mesh.occ_mesh
+
+    pre_similarity_texture_cache = build_similarity_texture_cache_for_all_views(xray_meshes, faces, new_verts_uvs,
+        pre_dist_list, pre_elev_list, pre_azim_list,
+        args.image_size, args.image_size * args.render_simple_factor, args.uv_size, args.fragment_k,
+        DEVICE, hits=args.hits
+    )
 
     # start generation
     print("=> start generating texture...")

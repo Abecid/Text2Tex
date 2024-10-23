@@ -15,3 +15,5 @@ accelerate
 objaverse
 #mathutils
 iopath==0.1.10
+# For Trimesh
+embreex
