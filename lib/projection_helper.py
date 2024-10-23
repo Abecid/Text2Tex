@@ -305,7 +305,7 @@ def build_similarity_texture_cache_for_all_views(meshes, faces, verts_uvs,
         for j in range(hits):
             if hits > 1:
                 mesh = meshes[j]
-                faces = mesh.faces_packed
+                faces = mesh.faces_packed()
             else:
                 mesh = meshes
             cameras, _, _, _, similarity_tensor, _, _ = render_one_view(mesh,
