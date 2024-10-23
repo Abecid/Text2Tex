@@ -296,7 +296,8 @@ def build_similarity_texture_cache_for_all_views(meshes, faces, verts_uvs,
     dist_list, elev_list, azim_list,
     image_size, image_size_scaled, uv_size, faces_per_pixel,
     device,
-    hits=1
+    hits=1,
+    xray_mesh=None
     ):
 
     num_candidate_views = len(dist_list)
@@ -308,7 +309,8 @@ def build_similarity_texture_cache_for_all_views(meshes, faces, verts_uvs,
             if hits > 1:
                 mesh = meshes[j]
                 faces = mesh.faces_packed()
-                textures_idx = mesh.textures.faces_uvs_packed()
+                # textures_idx = mesh.textures.faces_uvs_packed()
+                textures_idx = xray_mesh.visible_texture_map_list[i * hits + j]
             else:
                 mesh = meshes
             cameras, _, _, _, similarity_tensor, _, _ = render_one_view(mesh,

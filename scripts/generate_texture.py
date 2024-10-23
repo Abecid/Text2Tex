@@ -280,7 +280,7 @@ if __name__ == "__main__":
     pre_similarity_texture_cache = build_similarity_texture_cache_for_all_views(xray_meshes, faces, new_verts_uvs,
         pre_dist_list, pre_elev_list, pre_azim_list,
         args.image_size, args.image_size * args.render_simple_factor, args.uv_size, args.fragment_k,
-        DEVICE, hits=args.hits
+        DEVICE, hits=args.hits, xray_mesh=xray_mesh
     )
 
     # start generation
