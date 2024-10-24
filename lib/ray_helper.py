@@ -184,7 +184,9 @@ class XRayMesh:
             ray_indexes, points, mesh_face_indices = raycast.get_image(mesh_frame, self.max_hits * 2 - 1)
             
             for i in range(self.max_hits):
-                idx = i * 2 if self.remove_backface_hits else i
+                idx = i
+                # idx = i * 2 if self.remove_backface_hits else i
+                print(len(mesh_face_indices[idx]))
                 visible_faces = faces[mesh_face_indices[idx]]  # Only keep the visible faces
                 self.mesh_face_indices_list.append(torch.tensor(mesh_face_indices[idx], dtype=torch.int64, device='cuda'))
                 visible_faces = torch.tensor(visible_faces, dtype=torch.int64, device='cuda')
