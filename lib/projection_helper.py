@@ -203,7 +203,7 @@ def build_diffusion_mask(mesh_stuff,
     exist_texture_expand = exist_texture.unsqueeze(0).unsqueeze(-1).expand(-1, -1, -1, 3).to(device)
     mask_mesh.textures = TexturesUV(
         maps=torch.ones_like(exist_texture_expand),
-        faces_uvs=faces.textures_idx[None, ...],
+        faces_uvs=faces,
         verts_uvs=verts_uvs[None, ...],
         sampling_mode="nearest"
     )
