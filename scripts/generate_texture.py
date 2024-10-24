@@ -199,10 +199,11 @@ if __name__ == "__main__":
         new_verts_uvs, init_texture = adjust_uv_map(faces, aux, init_texture, args.uv_size)
     else:
         new_verts_uvs = aux.verts_uvs
+    texture_init_maps = transforms.ToTensor()(init_texture)[None, ...].permute(0, 2, 3, 1).to(DEVICE)
 
     # update the mesh
     mesh.textures = TexturesUV(
-        maps=transforms.ToTensor()(init_texture)[None, ...].permute(0, 2, 3, 1).to(DEVICE),
+        maps=texture_init_maps,
         faces_uvs=faces.textures_idx[None, ...],
         verts_uvs=new_verts_uvs[None, ...]
     )
@@ -274,7 +275,7 @@ if __name__ == "__main__":
     pre_view_punishments = view_punishments[:NUM_PRINCIPLE*args.hits]
     
     camera_poses = [pre_elev_list, pre_azim_list, pre_dist_list]
-    xray_mesh = XRayMesh(mesh, camera_poses, device=DEVICE, max_hits=args.hits, texture_size=args.uv_size)
+    xray_mesh = XRayMesh(mesh, camera_poses, device=DEVICE, max_hits=args.hits, texture_size=args.uv_size, new_verts_uvs=new_verts_uvs, faces=faces, texture_init_maps=texture_init_maps)
     xray_meshes = xray_mesh.occ_mesh
 
     pre_similarity_texture_cache = build_similarity_texture_cache_for_all_views(xray_meshes, faces, new_verts_uvs,

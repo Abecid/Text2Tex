@@ -124,7 +124,20 @@ class RaycastingImaging:
         return ray_indexes, points, mesh_face_indices
 
 class XRayMesh:
-    def __init__(self, mesh, cameras, texture_size=1536, channels=3, device='cuda', max_hits=2, remove_backface_hits=True, sampling_mode='nearest'):
+    def __init__(
+        self, 
+        mesh, 
+        cameras, 
+        texture_size=1536, 
+        channels=3, 
+        device='cuda', 
+        max_hits=2, 
+        remove_backface_hits=True, 
+        sampling_mode='nearest', 
+        new_verts_uvs=None, 
+        faces=None, 
+        texture_init_maps=None
+    ):
         self.mesh = mesh
         self.target_size = (texture_size,texture_size)
         self.channels = channels
@@ -134,7 +147,7 @@ class XRayMesh:
         self.sampling_mode = sampling_mode
         
         self.set_cameras(cameras)
-        self.generate_occluded_geometry()
+        self.generate_occluded_geometry(faces, texture_init_maps, new_verts_uvs)
     
     def set_cameras(self, camera_poses, centers=None, scale=None):
         elev = torch.FloatTensor(camera_poses[0])
@@ -143,9 +156,9 @@ class XRayMesh:
         R, T = look_at_view_transform(dist=dist, elev=elev, azim=azim, at=centers or ((0,0,0),))
         self.cameras = FoVOrthographicCameras(device=self.device, R=R, T=T, scale_xyz=scale or ((1,1,1),))
         
-    def generate_occluded_geometry(self):
+    def generate_occluded_geometry(self, faces, texture_init_maps, new_verts_uvs):
         vertices = self.mesh.verts_packed().cpu().numpy()  # (V, 3) shape, move to CPU and convert to numpy
-        faces = self.mesh.faces_packed().cpu().numpy()  # (F, 3) shape, move to CPU and convert to numpy
+        # faces = self.mesh.faces_packed().cpu().numpy()  # (F, 3) shape, move to CPU and convert to numpy
 
         raycast = RaycastingImaging()
 
@@ -175,13 +188,15 @@ class XRayMesh:
                 visible_faces = torch.tensor(visible_faces, dtype=torch.int64, device='cuda')
 
                 visible_faces_list.append(visible_faces)
-                self.visible_texture_map_list.append(self.mesh.textures.faces_uvs_padded()[0, mesh_face_indices[idx]])
+                
+                # self.visible_texture_map_list.append(self.mesh.textures.faces_uvs_padded()[0, mesh_face_indices[idx]])
+                self.visible_texture_map_list.append(faces.textures_idx[mesh_face_indices[idx]])
         
         new_map = torch.zeros(self.target_size+(self.channels,), device=self.device)
         textures = TexturesUV(
-            [new_map] * len(self.cameras) * self.max_hits, 
+            [texture_init_maps] * len(self.cameras) * self.max_hits, 
             self.visible_texture_map_list, 
-            [self.mesh.textures.verts_uvs_padded()[0]] * len(self.cameras) * self.max_hits, 
+            [new_verts_uvs] * len(self.cameras) * self.max_hits, # [self.mesh.textures.verts_uvs_padded()[0]] * len(self.cameras) * self.max_hits, 
             sampling_mode=self.sampling_mode
         )
         self.occ_mesh = Meshes(verts = [self.mesh.verts_packed()] * len(self.cameras) * self.max_hits, faces = visible_faces_list, textures = textures)

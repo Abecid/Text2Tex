@@ -308,17 +308,18 @@ def build_similarity_texture_cache_for_all_views(meshes, faces, verts_uvs,
         for j in range(hits):
             print(f"Processing view {i} hit {j}")
             if hits > 1:
-                # mesh = meshes[j]
-                faces = meshes[j].faces_packed()
+                mesh = meshes[i*hits+j]
+                # faces = meshes[j].faces_packed()
+                faces = None
                 # textures_idx = mesh.textures.faces_uvs_packed()
                 textures_idx = xray_mesh.visible_texture_map_list[i * hits + j]
             else:
                 mesh = meshes
-            cameras, _, _, _, similarity_tensor, _, _ = render_one_view(meshes[j],
+            cameras, _, _, _, similarity_tensor, _, _ = render_one_view(mesh,
                 dist_list[i], elev_list[i], azim_list[i],
                 image_size, faces_per_pixel, device)
 
-            similarity_texture_cache[i] = build_backproject_mask(meshes[j], faces, verts_uvs, 
+            similarity_texture_cache[i] = build_backproject_mask(mesh, faces, verts_uvs, 
                 cameras, transforms.ToPILImage()(similarity_tensor[0, :, :, 0]).convert("RGB"), faces_per_pixel,
                 image_size_scaled, uv_size, device, textures_idx=textures_idx)
 
