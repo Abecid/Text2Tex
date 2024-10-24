@@ -174,11 +174,14 @@ class XRayMesh:
             Rt[:3, :3] = np.swapaxes(R, 1, 2)  # Top-left 3x3 is the transposed rotation
             Rt[:3, 3] = T   # Top-right 3x1 is the inverted translation
 
-            # mesh_frame = Trimesh(vertices=vertices, faces=faces).apply_transform(Rt)
-
+            # mesh_frame = Trimesh(vertices=vertices, faces=self.mesh.faces_packed().cpu().numpy()).apply_transform(Rt)
+            
+            # self.mesh # Meshes -> Trimesh
+            mesh_frame = Trimesh(vertices=self.mesh.verts_packed().cpu().numpy(), faces=self.mesh.faces_packed().cpu().numpy()).apply_transform(Rt)
+            
             c2w = np.eye(4).astype(np.float32)[:3]
             raycast.prepare(image_height=512 * 3, image_width=512 * 3, c2w=c2w)
-            ray_indexes, points, mesh_face_indices = raycast.get_image(self.mesh, self.max_hits * 2 - 1)   
+            ray_indexes, points, mesh_face_indices = raycast.get_image(mesh_frame, self.max_hits * 2 - 1)
             
             for i in range(self.max_hits):
                 idx = i * 2 if self.remove_backface_hits else i

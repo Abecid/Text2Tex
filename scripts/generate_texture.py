@@ -202,6 +202,7 @@ if __name__ == "__main__":
     texture_init_maps = transforms.ToTensor()(init_texture)[None, ...].permute(0, 2, 3, 1).to(DEVICE)
 
     # update the mesh
+    # num_mesh = len(cameras) * len(hits)
     mesh.textures = TexturesUV(
         maps=texture_init_maps,
         faces_uvs=faces.textures_idx[None, ...],

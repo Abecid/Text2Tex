@@ -47,7 +47,7 @@ def init_mesh(input_path, cache_path, device):
     principle_directions = None
     
     _, faces, aux = load_obj(cache_path, device=device)
-    mesh = load_objs_as_meshes([cache_path], device=device)
+    mesh = load_objs_as_meshes([cache_path], device=device) # Meshes
 
     num_verts = mesh.verts_packed().shape[0]
 
