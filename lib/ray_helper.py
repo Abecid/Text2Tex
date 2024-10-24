@@ -186,7 +186,8 @@ class XRayMesh:
             for i in range(self.max_hits):
                 idx = i
                 # idx = i * 2 if self.remove_backface_hits else i
-                print(len(mesh_face_indices[idx]))
+                print(f'Length of mesh faces indices {idx}', len(mesh_face_indices[idx]))
+                print(f"Mesh faces indices of {idx}", mesh_face_indices[idx])
                 visible_faces = faces[mesh_face_indices[idx]]  # Only keep the visible faces
                 self.mesh_face_indices_list.append(torch.tensor(mesh_face_indices[idx], dtype=torch.int64, device='cuda'))
                 visible_faces = torch.tensor(visible_faces, dtype=torch.int64, device='cuda')
