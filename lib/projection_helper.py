@@ -203,7 +203,7 @@ def build_diffusion_mask(mesh_stuff,
     exist_texture_expand = exist_texture.unsqueeze(0).unsqueeze(-1).expand(-1, -1, -1, 3).to(device)
     mask_mesh.textures = TexturesUV(
         maps=torch.ones_like(exist_texture_expand),
-        faces_uvs=faces,
+        faces_uvs=faces[None, ...],
         verts_uvs=verts_uvs[None, ...],
         sampling_mode="nearest"
     )
@@ -217,7 +217,7 @@ def build_diffusion_mask(mesh_stuff,
     exist_texture_expand = exist_texture.unsqueeze(0).unsqueeze(-1).expand(-1, -1, -1, 3).to(device)
     mask_mesh.textures = TexturesUV(
         maps=1 - exist_texture_expand,
-        faces_uvs=faces.textures_idx[None, ...],
+        faces_uvs=faces[None, ...],
         verts_uvs=verts_uvs[None, ...],
         sampling_mode="nearest"
     )
@@ -235,7 +235,7 @@ def build_diffusion_mask(mesh_stuff,
             # # only consider the views that have already appeared before
             # similarity_texture_cache[0:target_value+1].argmax(0) == target_value
         ).float().unsqueeze(0).unsqueeze(-1).expand(-1, -1, -1, 3).to(device),
-        faces_uvs=faces.textures_idx[None, ...],
+        faces_uvs=faces[None, ...],
         verts_uvs=verts_uvs[None, ...],
         sampling_mode="nearest"
     )
