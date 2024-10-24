@@ -188,9 +188,7 @@ class XRayMesh:
                 # idx = i * 2 if self.remove_backface_hits else i
                 # print(f'Length of mesh faces indices {idx}', len(mesh_face_indices[idx]))
                 # print(f"Mesh faces indices of {idx}", mesh_face_indices[idx])
-                # print(f"Faces: {faces}")
-                print(f"Shape of faces: {faces.shape}")
-                visible_faces = faces[mesh_face_indices[idx]]  # Only keep the visible faces
+                visible_faces = faces.verts_idx[mesh_face_indices[idx]]  # Only keep the visible faces
                 self.mesh_face_indices_list.append(torch.tensor(mesh_face_indices[idx], dtype=torch.int64, device='cuda'))
                 visible_faces = torch.tensor(visible_faces, dtype=torch.int64, device='cuda')
 
@@ -200,8 +198,9 @@ class XRayMesh:
                 self.visible_texture_map_list.append(faces.textures_idx[mesh_face_indices[idx]])
         
         new_map = torch.zeros(self.target_size+(self.channels,), device=self.device)
+        expanded_texture_init_maps = texture_init_maps.repeat(len(self.cameras) * self.max_hits, 1, 1, 1)
         textures = TexturesUV(
-            [texture_init_maps] * len(self.cameras) * self.max_hits, 
+            expanded_texture_init_maps, 
             self.visible_texture_map_list, 
             [new_verts_uvs] * len(self.cameras) * self.max_hits, # [self.mesh.textures.verts_uvs_padded()[0]] * len(self.cameras) * self.max_hits, 
             sampling_mode=self.sampling_mode
