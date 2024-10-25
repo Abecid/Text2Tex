@@ -185,7 +185,7 @@ if __name__ == "__main__":
 
     # init resources
     # init mesh
-    mesh, _, faces, aux, principle_directions, mesh_center, mesh_scale = init_mesh(
+    mesh, _, mesh_faces, aux, principle_directions, mesh_center, mesh_scale = init_mesh(
         os.path.join(args.input_dir, args.obj_file),
         os.path.join(output_dir, args.obj_file), 
         DEVICE
@@ -196,7 +196,7 @@ if __name__ == "__main__":
 
     # HACK adjust UVs for multiple materials
     if args.use_multiple_objects:
-        new_verts_uvs, init_texture = adjust_uv_map(faces, aux, init_texture, args.uv_size)
+        new_verts_uvs, init_texture = adjust_uv_map(mesh_faces, aux, init_texture, args.uv_size)
     else:
         new_verts_uvs = aux.verts_uvs
     texture_init_maps = transforms.ToTensor()(init_texture)[None, ...].permute(0, 2, 3, 1).to(DEVICE)
@@ -205,7 +205,7 @@ if __name__ == "__main__":
     # num_mesh = len(cameras) * len(hits)
     mesh.textures = TexturesUV(
         maps=texture_init_maps,
-        faces_uvs=faces.textures_idx[None, ...],
+        faces_uvs=mesh_faces.textures_idx[None, ...],
         verts_uvs=new_verts_uvs[None, ...]
     )
 
@@ -276,10 +276,10 @@ if __name__ == "__main__":
     pre_view_punishments = view_punishments[:NUM_PRINCIPLE*args.hits]
     
     camera_poses = [pre_elev_list, pre_azim_list, pre_dist_list]
-    xray_mesh = XRayMesh(mesh, camera_poses, device=DEVICE, max_hits=args.hits, texture_size=args.uv_size, new_verts_uvs=new_verts_uvs, faces=faces, texture_init_maps=texture_init_maps)
+    xray_mesh = XRayMesh(mesh, camera_poses, device=DEVICE, max_hits=args.hits, texture_size=args.uv_size, new_verts_uvs=new_verts_uvs, faces=mesh_faces, texture_init_maps=texture_init_maps)
     xray_meshes = xray_mesh.occ_mesh
 
-    pre_similarity_texture_cache = build_similarity_texture_cache_for_all_views(xray_meshes, faces, new_verts_uvs,
+    pre_similarity_texture_cache = build_similarity_texture_cache_for_all_views(xray_meshes, mesh_faces, new_verts_uvs,
         pre_dist_list, pre_elev_list, pre_azim_list,
         args.image_size, args.image_size * args.render_simple_factor, args.uv_size, args.fragment_k,
         DEVICE, hits=args.hits, xray_mesh=xray_mesh
@@ -299,7 +299,7 @@ if __name__ == "__main__":
             print("=> generating image for prompt: {}...".format(prompt))
             
             xray_mesh_selected = xray_meshes[view_idx * args.hits + hit]
-            faces = xray_mesh.faces_packed()
+            faces = xray_mesh_selected.faces_packed()
             textures_idx = xray_mesh.visible_texture_map_list[view_idx * args.hits + hit]
             vertices_idx = xray_mesh.visible_faces_list[view_idx * args.hits + hit]
 
@@ -472,6 +472,12 @@ if __name__ == "__main__":
         azim_list = azim_list[NUM_PRINCIPLE:]
         sector_list = sector_list[NUM_PRINCIPLE:]
         view_punishments = view_punishments[NUM_PRINCIPLE:]
+        
+        mesh.textures = TexturesUV(
+            maps=transformed_texture,
+            faces_uvs=mesh_faces.textures_idx[None, ...],
+            verts_uvs=new_verts_uvs[None, ...]
+        )
 
         similarity_texture_cache = build_similarity_texture_cache_for_all_views(mesh, faces, new_verts_uvs,
             dist_list, elev_list, azim_list,
