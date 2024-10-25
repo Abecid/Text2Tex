@@ -162,7 +162,7 @@ class XRayMesh:
 
         raycast = RaycastingImaging()
 
-        visible_faces_list = []
+        self.visible_faces_list = []
         self.visible_texture_map_list = []
         self.mesh_face_indices_list = []
         
@@ -191,8 +191,12 @@ class XRayMesh:
                 visible_faces = faces.verts_idx[mesh_face_indices[idx]]  # Only keep the visible faces
                 self.mesh_face_indices_list.append(torch.tensor(mesh_face_indices[idx], dtype=torch.int64, device='cuda'))
                 visible_faces = torch.tensor(visible_faces, dtype=torch.int64, device='cuda')
+                
+                # Initialize new mesh with Trimesh
+                # Call init_mesh with the new mesh
+                # Save the mesh info in a list
 
-                visible_faces_list.append(visible_faces)
+                self.visible_faces_list.append(visible_faces)
                 
                 # self.visible_texture_map_list.append(self.mesh.textures.faces_uvs_padded()[0, mesh_face_indices[idx]])
                 self.visible_texture_map_list.append(faces.textures_idx[mesh_face_indices[idx]])
@@ -205,5 +209,5 @@ class XRayMesh:
             [new_verts_uvs] * len(self.cameras) * self.max_hits, # [self.mesh.textures.verts_uvs_padded()[0]] * len(self.cameras) * self.max_hits, 
             sampling_mode=self.sampling_mode
         )
-        self.occ_mesh = Meshes(verts = [self.mesh.verts_packed()] * len(self.cameras) * self.max_hits, faces = visible_faces_list, textures = textures)
+        self.occ_mesh = Meshes(verts = [self.mesh.verts_packed()] * len(self.cameras) * self.max_hits, faces = self.visible_faces_list, textures = textures)
         self.occ_cameras = FoVOrthographicCameras(device=self.device, R=self.cameras.R.repeat_interleave(self.max_hits, 0), T=self.cameras.T.repeat_interleave(self.max_hits, 0), scale_xyz=self.cameras.scale_xyz.repeat_interleave(self.max_hits, 0))

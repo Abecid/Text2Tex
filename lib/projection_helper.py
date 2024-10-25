@@ -194,7 +194,8 @@ def build_backproject_mask(mesh, faces, verts_uvs,
 @torch.no_grad()
 def build_diffusion_mask(mesh_stuff, 
     renderer, exist_texture, similarity_texture_cache, target_value, device, image_size, 
-    smooth_mask=False, view_threshold=0.01):
+    smooth_mask=False, view_threshold=0.01, xray_mesh=None, textures_idx=None
+    ):
 
     mesh, faces, verts_uvs = mesh_stuff
     mask_mesh = mesh.clone() # NOTE in-place operation - DANGER!!!
@@ -203,7 +204,7 @@ def build_diffusion_mask(mesh_stuff,
     exist_texture_expand = exist_texture.unsqueeze(0).unsqueeze(-1).expand(-1, -1, -1, 3).to(device)
     mask_mesh.textures = TexturesUV(
         maps=torch.ones_like(exist_texture_expand),
-        faces_uvs=faces[None, ...],
+        faces_uvs=textures_idx[None, ...],
         verts_uvs=verts_uvs[None, ...],
         sampling_mode="nearest"
     )
@@ -217,7 +218,7 @@ def build_diffusion_mask(mesh_stuff,
     exist_texture_expand = exist_texture.unsqueeze(0).unsqueeze(-1).expand(-1, -1, -1, 3).to(device)
     mask_mesh.textures = TexturesUV(
         maps=1 - exist_texture_expand,
-        faces_uvs=faces[None, ...],
+        faces_uvs=textures_idx[None, ...],
         verts_uvs=verts_uvs[None, ...],
         sampling_mode="nearest"
     )
@@ -235,7 +236,7 @@ def build_diffusion_mask(mesh_stuff,
             # # only consider the views that have already appeared before
             # similarity_texture_cache[0:target_value+1].argmax(0) == target_value
         ).float().unsqueeze(0).unsqueeze(-1).expand(-1, -1, -1, 3).to(device),
-        faces_uvs=faces[None, ...],
+        faces_uvs=textures_idx[None, ...],
         verts_uvs=verts_uvs[None, ...],
         sampling_mode="nearest"
     )
@@ -333,7 +334,11 @@ def render_one_view_and_build_masks(dist, elev, azim,
     mesh, faces, verts_uvs,
     image_size, faces_per_pixel,
     init_image_dir, mask_image_dir, normal_map_dir, depth_map_dir, similarity_map_dir,
-    device, save_intermediate=False, smooth_mask=False, view_threshold=0.01):
+    device, save_intermediate=False, smooth_mask=False, view_threshold=0.01,
+    xray_mesh=None,
+    textures_idx=None,
+    hit=None
+    ):
     
     # render the view
     (
@@ -370,7 +375,7 @@ def render_one_view_and_build_masks(dist, elev, azim,
     new_mask_image, update_mask_image, old_mask_image, exist_mask_image = build_diffusion_mask(
         (mesh, faces, verts_uvs), 
         flat_renderer, exist_texture, similarity_texture_cache, selected_view_idx, device, image_size, 
-        smooth_mask=smooth_mask, view_threshold=view_threshold
+        smooth_mask=smooth_mask, view_threshold=view_threshold, xray_mesh=xray_mesh, textures_idx=textures_idx
     )
     # NOTE the view idx is the absolute idx in the sample space (i.e. `selected_view_idx`)
     # it should match with `similarity_texture_cache`
@@ -388,15 +393,15 @@ def render_one_view_and_build_masks(dist, elev, azim,
 
     # save intermediate results
     if save_intermediate:
-        init_image.save(os.path.join(init_image_dir, "{}.png".format(view_idx)))
-        normal_map.save(os.path.join(normal_map_dir, "{}.png".format(view_idx)))
-        depth_map.save(os.path.join(depth_map_dir, "{}.png".format(view_idx)))
-        similarity_map.save(os.path.join(similarity_map_dir, "{}.png".format(view_idx)))
+        init_image.save(os.path.join(init_image_dir, "{}_{}.png".format(view_idx, hit)))
+        normal_map.save(os.path.join(normal_map_dir, "{}_{}.png".format(view_idx, hit)))
+        depth_map.save(os.path.join(depth_map_dir, "{}_{}.png".format(view_idx, hit)))
+        similarity_map.save(os.path.join(similarity_map_dir, "{}_{}.png".format(view_idx, hit)))
 
-        new_mask_image.save(os.path.join(mask_image_dir, "{}_new.png".format(view_idx)))
-        update_mask_image.save(os.path.join(mask_image_dir, "{}_update.png".format(view_idx)))
-        old_mask_image.save(os.path.join(mask_image_dir, "{}_old.png".format(view_idx)))
-        exist_mask_image.save(os.path.join(mask_image_dir, "{}_exist.png".format(view_idx)))
+        new_mask_image.save(os.path.join(mask_image_dir, "{}_{}_new.png".format(view_idx, hit)))
+        update_mask_image.save(os.path.join(mask_image_dir, "{}_{}_update.png".format(view_idx, hit)))
+        old_mask_image.save(os.path.join(mask_image_dir, "{}_{}_old.png".format(view_idx, hit)))
+        exist_mask_image.save(os.path.join(mask_image_dir, "{}_{}_exist.png".format(view_idx, hit)))
 
         visualize_quad_mask(mask_image_dir, quad_mask_tensor, view_idx, view_heat, device)
 
@@ -416,7 +421,9 @@ def backproject_from_image(mesh, faces, verts_uvs, cameras,
     reference_image, new_mask_image, update_mask_image, 
     init_texture, exist_texture,
     image_size, uv_size, faces_per_pixel,
-    device):
+    device,
+    textures_idx=None
+    ):
 
     # construct pixel UVs
     renderer_scaled = init_renderer(cameras,
@@ -430,7 +437,7 @@ def backproject_from_image(mesh, faces, verts_uvs, cameras,
     fragments_scaled = renderer_scaled.rasterizer(mesh)
 
     # get UV coordinates for each pixel
-    faces_verts_uvs = verts_uvs[faces.textures_idx]
+    faces_verts_uvs = verts_uvs[textures_idx]
 
     pixel_uvs = interpolate_face_attributes(
         fragments_scaled.pix_to_face, fragments_scaled.bary_coords, faces_verts_uvs
