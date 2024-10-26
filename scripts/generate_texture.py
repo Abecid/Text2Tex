@@ -318,7 +318,6 @@ if __name__ == "__main__":
                 args.image_size, args.fragment_k,
                 init_image_dir, mask_image_dir, normal_map_dir, depth_map_dir, similarity_map_dir,
                 DEVICE, save_intermediate=True, smooth_mask=args.smooth_mask, view_threshold=args.view_threshold,
-                xray_mesh=xray_mesh,
                 textures_idx=textures_idx,
                 hit=hit
             )
@@ -373,7 +372,6 @@ if __name__ == "__main__":
                 args.image_size, args.fragment_k,
                 init_image_dir, mask_image_dir, normal_map_dir, depth_map_dir, similarity_map_dir,
                 DEVICE, save_intermediate=False, smooth_mask=args.smooth_mask, view_threshold=args.view_threshold,
-                xray_mesh=xray_mesh,
                 textures_idx=textures_idx,
                 hit=hit
             )
@@ -387,9 +385,9 @@ if __name__ == "__main__":
                     update_mask_image, keep_mask_image, depth_maps_tensor.permute(1, 2, 0).repeat(1, 1, 3).cpu().numpy(), 
                     args.a_prompt, args.n_prompt, args.guidance_scale, args.seed, args.eta, 1, DEVICE, args.blend)
 
-                diffused_image.save(os.path.join(inpainted_image_dir, "{}_{}_update.png".format(view_idx)))
-                diffused_image_before.save(os.path.join(inpainted_image_dir, "{}_{}_update_before.png".format(view_idx)))
-                diffused_image_after.save(os.path.join(inpainted_image_dir, "{}_{}_update_after.png".format(view_idx)))
+                diffused_image.save(os.path.join(inpainted_image_dir, "{}_{}_update.png".format(view_idx, hit)))
+                diffused_image_before.save(os.path.join(inpainted_image_dir, "{}_{}_update_before.png".format(view_idx, hit)))
+                diffused_image_after.save(os.path.join(inpainted_image_dir, "{}_{}_update_after.png".format(view_idx, hit)))
             
                 # 1.3.2. back-project and create texture
                 # NOTE projection mask = generate mask
@@ -479,10 +477,10 @@ if __name__ == "__main__":
             verts_uvs=new_verts_uvs[None, ...]
         )
 
-        similarity_texture_cache = build_similarity_texture_cache_for_all_views(mesh, faces, new_verts_uvs,
+        similarity_texture_cache = build_similarity_texture_cache_for_all_views(mesh, mesh_faces, new_verts_uvs,
             dist_list, elev_list, azim_list,
             args.image_size, args.image_size * args.render_simple_factor, args.uv_size, args.fragment_k,
-            DEVICE, hits=args.hits, xray_mesh=xray_mesh
+            DEVICE, hits=args.hits
         )
         selected_view_ids = []
 
@@ -490,8 +488,8 @@ if __name__ == "__main__":
         start_time = time.time()
         for view_idx in range(args.update_steps):
             print("=> processing view {}...".format(view_idx))
-            mesh = xray_meshes[0]
-            faces = xray_mesh.faces_packed()
+            # mesh = xray_meshes[0]
+            # faces = xray_mesh.faces_packed()
             textures_idx = xray_mesh.visible_texture_map_list[view_idx * args.hits + hit]
             vertices_idx = xray_mesh.visible_faces_list[view_idx * args.hits + hit]
             

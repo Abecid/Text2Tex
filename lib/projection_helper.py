@@ -194,11 +194,14 @@ def build_backproject_mask(mesh, faces, verts_uvs,
 @torch.no_grad()
 def build_diffusion_mask(mesh_stuff, 
     renderer, exist_texture, similarity_texture_cache, target_value, device, image_size, 
-    smooth_mask=False, view_threshold=0.01, xray_mesh=None, textures_idx=None
+    smooth_mask=False, view_threshold=0.01, textures_idx=None
     ):
 
     mesh, faces, verts_uvs = mesh_stuff
     mask_mesh = mesh.clone() # NOTE in-place operation - DANGER!!!
+    
+    if textures_idx is None:
+        textures_idx = faces.textures_idx
 
     # visible mask => the whole region
     exist_texture_expand = exist_texture.unsqueeze(0).unsqueeze(-1).expand(-1, -1, -1, 3).to(device)
@@ -316,6 +319,7 @@ def build_similarity_texture_cache_for_all_views(meshes, faces, verts_uvs,
                 textures_idx = xray_mesh.visible_texture_map_list[i * hits + j]
             else:
                 mesh = meshes
+                textures_idx = None
             cameras, _, _, _, similarity_tensor, _, _ = render_one_view(mesh,
                 dist_list[i], elev_list[i], azim_list[i],
                 image_size, faces_per_pixel, device)
@@ -335,9 +339,8 @@ def render_one_view_and_build_masks(dist, elev, azim,
     image_size, faces_per_pixel,
     init_image_dir, mask_image_dir, normal_map_dir, depth_map_dir, similarity_map_dir,
     device, save_intermediate=False, smooth_mask=False, view_threshold=0.01,
-    xray_mesh=None,
     textures_idx=None,
-    hit=None
+    hit=1
     ):
     
     # render the view
@@ -375,7 +378,7 @@ def render_one_view_and_build_masks(dist, elev, azim,
     new_mask_image, update_mask_image, old_mask_image, exist_mask_image = build_diffusion_mask(
         (mesh, faces, verts_uvs), 
         flat_renderer, exist_texture, similarity_texture_cache, selected_view_idx, device, image_size, 
-        smooth_mask=smooth_mask, view_threshold=view_threshold, xray_mesh=xray_mesh, textures_idx=textures_idx
+        smooth_mask=smooth_mask, view_threshold=view_threshold, textures_idx=textures_idx
     )
     # NOTE the view idx is the absolute idx in the sample space (i.e. `selected_view_idx`)
     # it should match with `similarity_texture_cache`
