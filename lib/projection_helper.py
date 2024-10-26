@@ -438,6 +438,9 @@ def backproject_from_image(mesh, faces, verts_uvs, cameras,
         faces_per_pixel=faces_per_pixel
     )
     fragments_scaled = renderer_scaled.rasterizer(mesh)
+    
+    if textures_idx is None:
+        textures_idx = faces.textures_idx
 
     # get UV coordinates for each pixel
     faces_verts_uvs = verts_uvs[textures_idx]

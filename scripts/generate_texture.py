@@ -395,7 +395,7 @@ if __name__ == "__main__":
                     xray_mesh_selected, faces, new_verts_uvs, cameras, 
                     diffused_image, update_mask_image, update_mask_image, init_texture, exist_texture, 
                     args.image_size * args.render_simple_factor, args.uv_size, args.fragment_k,
-                    DEVICE
+                    DEVICE, textures_idx
                 )
                 
                 # update the mesh
