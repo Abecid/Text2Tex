@@ -490,8 +490,8 @@ if __name__ == "__main__":
             print("=> processing view {}...".format(view_idx))
             # mesh = xray_meshes[0]
             # faces = xray_mesh.faces_packed()
-            textures_idx = xray_mesh.visible_texture_map_list[view_idx * args.hits + hit]
-            vertices_idx = xray_mesh.visible_faces_list[view_idx * args.hits + hit]
+            # textures_idx = xray_mesh.visible_texture_map_list[view_idx * args.hits + hit]
+            # vertices_idx = xray_mesh.visible_faces_list[view_idx * args.hits + hit]
             
             # 2.1. render and build masks
 
