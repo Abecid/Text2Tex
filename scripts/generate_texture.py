@@ -500,7 +500,7 @@ if __name__ == "__main__":
                 selected_view_ids, view_punishments,
                 args.update_mode, dist_list, elev_list, azim_list, sector_list, view_idx,
                 similarity_texture_cache, exist_texture,
-                mesh, faces, new_verts_uvs,
+                mesh, mesh_faces, new_verts_uvs,
                 args.image_size, args.fragment_k,
                 init_image_dir, mask_image_dir, normal_map_dir, depth_map_dir, similarity_map_dir,
                 DEVICE, False
@@ -516,7 +516,7 @@ if __name__ == "__main__":
             ) = render_one_view_and_build_masks(dist, elev, azim, 
                 selected_view_ids[-1], view_idx, view_punishments, # => actual view idx and the sequence idx 
                 similarity_texture_cache, exist_texture,
-                mesh, faces, new_verts_uvs,
+                mesh, mesh_faces, new_verts_uvs,
                 args.image_size, args.fragment_k,
                 init_image_dir, mask_image_dir, normal_map_dir, depth_map_dir, similarity_map_dir,
                 DEVICE, save_intermediate=True, smooth_mask=args.smooth_mask, view_threshold=args.view_threshold
@@ -600,7 +600,7 @@ if __name__ == "__main__":
             # 2.3. back-project and create texture
             # NOTE projection mask = update mask
             init_texture, project_mask_image, exist_texture = backproject_from_image(
-                mesh, faces, new_verts_uvs, cameras, 
+                mesh, mesh_faces, new_verts_uvs, cameras, 
                 update_image, update_mask_image, update_mask_image, init_texture, exist_texture, 
                 args.image_size * args.render_simple_factor, args.uv_size, args.fragment_k,
                 DEVICE
@@ -611,7 +611,7 @@ if __name__ == "__main__":
             # update the mesh
             mesh.textures = TexturesUV(
                 maps=transforms.ToTensor()(init_texture)[None, ...].permute(0, 2, 3, 1).to(DEVICE),
-                faces_uvs=faces[None, ...],
+                faces_uvs=mesh_faces.textures_idx[None, ...],
                 verts_uvs=new_verts_uvs[None, ...]
             )
 
@@ -620,7 +620,7 @@ if __name__ == "__main__":
             save_backproject_obj(
                 mesh_dir, "{}.obj".format(view_idx),
                 mesh_scale * mesh.verts_packed() + mesh_center if args.use_unnormalized else mesh.verts_packed(),
-                vertices_idx, new_verts_uvs, textures_idx, init_texture, 
+                mesh_faces.verts_idx, new_verts_uvs, mesh_faces.textures_idx, init_texture, 
                 DEVICE
             )
 
@@ -650,7 +650,7 @@ if __name__ == "__main__":
             save_backproject_obj(
                 mesh_dir, "{}_post.obj".format(view_idx),
                 mesh_scale * mesh.verts_packed() + mesh_center if args.use_unnormalized else mesh.verts_packed(),
-                faces.verts_idx, new_verts_uvs, faces.textures_idx, post_texture, 
+                mesh_faces.verts_idx, new_verts_uvs, mesh_faces.textures_idx, post_texture, 
                 DEVICE
             )
     
