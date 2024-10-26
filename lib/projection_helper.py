@@ -311,7 +311,7 @@ def build_similarity_texture_cache_for_all_views(meshes, faces, verts_uvs,
     for i in tqdm(range(num_candidate_views)):
         for j in range(hits):
             print(f"Processing view {i} hit {j}")
-            if hits > 1:
+            if hits > 1 and xray_mesh is not None:
                 mesh = meshes[i*hits+j]
                 # faces = meshes[j].faces_packed()
                 faces = None

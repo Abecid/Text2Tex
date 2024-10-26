@@ -480,7 +480,7 @@ if __name__ == "__main__":
         similarity_texture_cache = build_similarity_texture_cache_for_all_views(mesh, mesh_faces, new_verts_uvs,
             dist_list, elev_list, azim_list,
             args.image_size, args.image_size * args.render_simple_factor, args.uv_size, args.fragment_k,
-            DEVICE, hits=args.hits
+            DEVICE, # hits=args.hits, xray_mesh=mesh
         )
         selected_view_ids = []
 
