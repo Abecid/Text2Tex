@@ -17,3 +17,6 @@ objaverse
 iopath==0.1.10
 # For Trimesh
 embreex
+
+# For Reading CSVs
+pandas

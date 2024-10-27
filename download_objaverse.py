@@ -14,8 +14,7 @@ from tqdm import tqdm
 import trimesh
 
 
-BASE_PATH = os.path.join("./assets/objaverse")
-BASE_PATH = os.path.join("./final_objects3")
+BASE_PATH = os.path.join("./objaverse")
 os.makedirs(BASE_PATH, exist_ok=True)
 
 __version__ = "<REPLACE_WITH_VERSION>"
@@ -257,17 +256,9 @@ if __name__ == '__main__':
     obj_dict = load_objects(uid_list, download_processes=10)
     
     config_data = {
-        'mesh': "./model.obj",
-        'mesh_config_relative': True,
-        'use_mesh_name': False,
+        'obj_name': "model",
+        'obj_file': 'model.obj',
         'prompt': f"a photo of ",  
-        'steps': 30,
-        'cond_type': "depth",
-        'seed': 2,
-        'log_interval': 10,
-        'mesh_scale': 1,
-        'tex_fast_preview': True,
-        'view_fast_preview': True
     }
     
     mesh_path_list = glob.glob(os.path.join(_VERSIONED_PATH, "glbs", "*", "*.glb"))
