@@ -19,7 +19,7 @@ def parse_config():
     return options
 
 
-max_hits = [1, 2, 4]
+max_hits = [2, 4]
 style_prompt = None
 style_prompts = [
     None,
