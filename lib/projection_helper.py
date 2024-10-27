@@ -311,15 +311,16 @@ def build_similarity_texture_cache_for_all_views(meshes, faces, verts_uvs,
     for i in tqdm(range(num_candidate_views)):
         for j in range(hits):
             print(f"Processing view {i} hit {j}")
+            mesh = meshes[i*hits+j]
+            textures_idx = None
             if hits > 1 and xray_mesh is not None:
-                mesh = meshes[i*hits+j]
                 # faces = meshes[j].faces_packed()
                 faces = None
                 # textures_idx = mesh.textures.faces_uvs_packed()
                 textures_idx = xray_mesh.visible_texture_map_list[i * hits + j]
-            else:
-                mesh = meshes
-                textures_idx = None
+            # else:
+                # mesh = meshes
+                # textures_idx = None
             cameras, _, _, _, similarity_tensor, _, _ = render_one_view(mesh,
                 dist_list[i], elev_list[i], azim_list[i],
                 image_size, faces_per_pixel, device)
