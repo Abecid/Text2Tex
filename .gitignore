@@ -11,3 +11,5 @@ mathutils-3.3.0
 .dist
 
 __pycache__/
+
+outputs_server
