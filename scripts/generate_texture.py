@@ -432,7 +432,7 @@ if __name__ == "__main__":
             save_backproject_obj(
                 mesh_dir, "{}_{}.obj".format(view_idx, hit),
                 mesh_scale * mesh.verts_packed() + mesh_center if args.use_unnormalized else mesh.verts_packed(),
-                faces.verts_idx, new_verts_uvs, faces.textures_idx, init_texture, 
+                mesh_faces.verts_idx, new_verts_uvs, mesh_faces.textures_idx, init_texture, 
                 DEVICE
             )
 

@@ -13,3 +13,5 @@ mathutils-3.3.0
 __pycache__/
 
 outputs_server
+
+objaverse
