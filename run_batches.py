@@ -90,8 +90,8 @@ def run_batch(uid_list, description_list, style_prompt=None, max_hits=2):
             "--seed 42 "
             "--post_process "
             '--device "2080" '
-            "--use_objaverse"
-            f"--hits {max_hits}"
+            "--use_objaverse "
+            f"--hits {max_hits} "
         )
         
         # Run the command
