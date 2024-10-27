@@ -79,7 +79,7 @@ def test_run():
         "--post_process "
         '--device "2080" '
         "--use_objaverse "
-        f"--hits {max_hits} "
+        f"--hits {2} "
     )
     
     # Run the command
