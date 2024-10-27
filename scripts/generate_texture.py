@@ -164,17 +164,20 @@ def init_args():
 
 if __name__ == "__main__":
     args = init_args()
+    
+    datetime_now_str = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
 
     # save
     output_dir = os.path.join(
         args.output_dir, 
-        "{}-{}-{}-{}-{}-{}".format(
+        "{}-{}-{}-{}-{}-{}-{}".format(
             str(args.seed),
             args.viewpoint_mode[0]+str(args.num_viewpoints),
             args.update_mode[0]+str(args.update_steps),
             str(args.new_strength),
             str(args.update_strength),
-            str(args.view_threshold)
+            str(args.view_threshold),
+            datetime_now_str
         ),
     )
     if args.no_repaint: output_dir += "-norepaint"
