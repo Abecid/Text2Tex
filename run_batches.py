@@ -74,7 +74,7 @@ def run_batch(uid_list, description_list, style_prompt=None, max_hits=2):
             f"--output_dir {mesh_folder_path}/outputs "
             "--obj_name model "
             "--obj_file model.obj "
-            f'--prompt {description} '
+            f'--prompt "{description}" '
             "--add_view_to_prompt "
             "--ddim_steps 50 "
             "--new_strength 1 "
