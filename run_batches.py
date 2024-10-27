@@ -56,7 +56,7 @@ objects_path = "Objaverse_Objects.csv"
 objects_path = "Mini_Objects.csv"
 meshes_path = "objaverse"
 
-def test_run():
+def test_run(max_hit):
     command = (
         "python scripts/generate_texture.py "
         f"--input_dir data/backpack/ "
@@ -80,7 +80,7 @@ def test_run():
         "--post_process "
         '--device "2080" '
         "--use_objaverse "
-        f"--hits {2} "
+        f"--hits {max_hit} "
     )
     
     # Run the command
@@ -138,7 +138,7 @@ def main():
     if opt.hit is not None:
         max_hits = [opt.hit]
     if opt.test:
-        test_run()
+        test_run(max_hits[0])
         return
     if opt.prompt is not None:
         style_prompt = opt.prompt
