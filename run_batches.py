@@ -13,6 +13,7 @@ def parse_config():
     # File Config
     parser.add_argument('--prompt', type=str, required=False)
     parser.add_argument('--test', action="store_true", required=False)
+    parser.add_argument('--hit', type=int, required=False)
     options = parser.parse_args()
 
     return options
@@ -134,6 +135,8 @@ def run_batch(uid_list, description_list, style_prompt=None, max_hits=2):
 def main():
     global style_prompt, style_prompts, max_hits, run_multiple_style_prompts
     opt = parse_config()
+    if opt.hit is not None:
+        max_hits = [opt.hit]
     if opt.test:
         test_run()
         return
