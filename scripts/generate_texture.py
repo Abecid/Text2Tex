@@ -495,6 +495,10 @@ if __name__ == "__main__":
             faces_uvs=mesh_faces.textures_idx[None, ...],
             verts_uvs=new_verts_uvs[None, ...]
         )
+        
+        camera_poses = [elev_list, azim_list, dist_list]
+        xray_mesh = XRayMesh(mesh, camera_poses, device=DEVICE, max_hits=args.hits, texture_size=args.uv_size, new_verts_uvs=new_verts_uvs, faces=mesh_faces, texture_init_maps=transformed_texture)
+        xray_meshes = xray_mesh.occ_mesh
 
         similarity_texture_cache = build_similarity_texture_cache_for_all_views(mesh, mesh_faces, new_verts_uvs,
             dist_list, elev_list, azim_list,
