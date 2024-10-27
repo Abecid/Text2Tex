@@ -12,6 +12,7 @@ def parse_config():
                         epilog='Refer to https://arxiv.org/abs/2311.12891 for more details')
     # File Config
     parser.add_argument('--prompt', type=str, required=False)
+    parser.add_argument('--test', action="store_true", required=False)
     options = parser.parse_args()
 
     return options
@@ -53,6 +54,38 @@ run_multiple_style_prompts = True
 objects_path = "Objaverse_Objects.csv"
 objects_path = "Mini_Objects.csv"
 meshes_path = "objaverse"
+
+def test_run():
+    command = (
+        "python scripts/generate_texture.py "
+        f"--input_dir data/backpack/ "
+        f"--output_dir data/backpack/outputs "
+        "--obj_name mesh "
+        "--obj_file mesh.obj "
+        f'--prompt "orange backpack" '
+        "--add_view_to_prompt "
+        "--ddim_steps 50 "
+        "--new_strength 1 "
+        "--update_strength 0.3 "
+        "--view_threshold 0.1 "
+        "--blend 0 "
+        "--dist 1 "
+        "--num_viewpoints 36 "
+        "--viewpoint_mode predefined "
+        "--use_principle "
+        "--update_steps 20 "
+        "--update_mode heuristic "
+        "--seed 42 "
+        "--post_process "
+        '--device "2080" '
+        "--use_objaverse "
+        f"--hits {max_hits} "
+    )
+    
+    # Run the command
+    print(f"Running command: {command}")
+    subprocess.run(command, shell=True)
+
 
 def run_batch(uid_list, description_list, style_prompt=None, max_hits=2):
     for i, uid in tqdm(enumerate(uid_list)):
@@ -101,6 +134,9 @@ def run_batch(uid_list, description_list, style_prompt=None, max_hits=2):
 def main():
     global style_prompt, style_prompts, max_hits, run_multiple_style_prompts
     opt = parse_config()
+    if opt.test:
+        test_run()
+        return
     if opt.prompt is not None:
         style_prompt = opt.prompt
     # Read the CSV and extract the list of uids
