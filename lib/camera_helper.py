@@ -70,7 +70,9 @@ def filter_viewpoints(pre_viewpoints: dict, viewpoints: dict):
 
 
 def init_viewpoints(mode, sample_space, init_dist, init_elev, principle_directions, 
-    use_principle=True, use_shapenet=False, use_objaverse=False):
+    use_principle=True, use_shapenet=False, use_objaverse=False,
+    hits=1
+    ):
 
     if mode == "predefined":
 
@@ -94,7 +96,7 @@ def init_viewpoints(mode, sample_space, init_dist, init_elev, principle_directio
         raise NotImplementedError()
 
     # punishments for views -> in case always selecting the same view
-    view_punishments = [1 for _ in range(len(dist_list))]
+    view_punishments = [1 for _ in range(len(dist_list*hits))]
 
     if use_principle:
 

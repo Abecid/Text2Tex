@@ -77,7 +77,9 @@ def select_viewpoint(selected_view_ids, view_punishments,
     mesh, faces, verts_uvs,
     image_size, faces_per_pixel,
     init_image_dir, mask_image_dir, normal_map_dir, depth_map_dir, similarity_map_dir,
-    device, use_principle=False
+    device, use_principle=False,
+    hits=1,
+    xray_mesh=None
 ):
     if mode == "sequential":
         
@@ -99,25 +101,28 @@ def select_viewpoint(selected_view_ids, view_punishments,
         else:
 
             selected_view_idx = None
+            selected_hit = None
             max_heat = 0
 
             print("=> selecting next view...")
             view_heat_list = []
-            for sample_idx in tqdm(range(len(dist_list))):
+            for hit in range(hits):
+                for sample_idx in tqdm(range(len(dist_list))):
+                    mesh = xray_mesh[hits * sample_idx + hit] if xray_mesh is not None else mesh
+                    view_heat, *_ = render_one_view_and_build_masks(dist_list[sample_idx], elev_list[sample_idx], azim_list[sample_idx], 
+                        sample_idx, sample_idx, view_punishments,
+                        similarity_texture_cache, exist_texture,
+                        mesh, faces, verts_uvs,
+                        image_size, faces_per_pixel,
+                        init_image_dir, mask_image_dir, normal_map_dir, depth_map_dir, similarity_map_dir,
+                        device)
 
-                view_heat, *_ = render_one_view_and_build_masks(dist_list[sample_idx], elev_list[sample_idx], azim_list[sample_idx], 
-                    sample_idx, sample_idx, view_punishments,
-                    similarity_texture_cache, exist_texture,
-                    mesh, faces, verts_uvs,
-                    image_size, faces_per_pixel,
-                    init_image_dir, mask_image_dir, normal_map_dir, depth_map_dir, similarity_map_dir,
-                    device)
+                    if view_heat > max_heat:
+                        selected_view_idx = sample_idx
+                        selected_hit = hit
+                        max_heat = view_heat
 
-                if view_heat > max_heat:
-                    selected_view_idx = sample_idx
-                    max_heat = view_heat
-
-                view_heat_list.append(view_heat.item())
+                    view_heat_list.append(view_heat.item())
 
             print(view_heat_list)
             print("select view {} with heat {}".format(selected_view_idx, max_heat))
@@ -146,7 +151,7 @@ def select_viewpoint(selected_view_ids, view_punishments,
     else:
         raise NotImplementedError()
 
-    return dist, elev, azim, sector, selected_view_ids, view_punishments
+    return dist, elev, azim, sector, selected_view_ids, view_punishments, selected_hit
 
 
 @torch.no_grad()
@@ -304,7 +309,7 @@ def build_similarity_texture_cache_for_all_views(meshes, faces, verts_uvs,
     xray_mesh=None
     ):
 
-    num_candidate_views = len(dist_list)
+    num_candidate_views = len(dist_list*hits)
     similarity_texture_cache = torch.zeros(num_candidate_views*hits, uv_size, uv_size).to(device)
 
     print("=> building similarity texture cache for all views...")
