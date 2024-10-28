@@ -71,7 +71,7 @@ def test_run(max_hit):
         "--view_threshold 0.1 "
         "--blend 0 "
         "--dist 1 "
-        "--num_viewpoints 36 "
+        "--num_viewpoints 20 "
         "--viewpoint_mode predefined "
         "--use_principle "
         "--update_steps 20 "

@@ -226,7 +226,9 @@ if __name__ == "__main__":
     ) = init_viewpoints(args.viewpoint_mode, args.num_viewpoints, args.dist, args.elev, principle_directions, 
                             use_principle=True, 
                             use_shapenet=args.use_shapenet,
-                            use_objaverse=args.use_objaverse)
+                            use_objaverse=args.use_objaverse,
+                            hits=args.hits
+                        )
 
     # save args
     save_args(args, output_dir)
@@ -315,7 +317,7 @@ if __name__ == "__main__":
                 keep_mask_image, update_mask_image, generate_mask_image, 
                 keep_mask_tensor, update_mask_tensor, generate_mask_tensor, all_mask_tensor, quad_mask_tensor,
             ) = render_one_view_and_build_masks(dist, elev, azim, 
-                view_idx*(hit+1), view_idx*(hit+1), view_punishments, # => actual view idx and the sequence idx 
+                view_idx*args.hits+(hit), view_idx, view_punishments, # => actual view idx and the sequence idx 
                 pre_similarity_texture_cache, exist_texture,
                 xray_mesh_selected, faces, new_verts_uvs,
                 args.image_size, args.fragment_k,
@@ -374,7 +376,7 @@ if __name__ == "__main__":
                 renderer, cameras, fragments,
                 init_image, *_,
             ) = render_one_view_and_build_masks(dist, elev, azim, 
-                view_idx*hit, view_idx*hit, view_punishments, # => actual view idx and the sequence idx 
+                view_idx*args.hits+hit, view_idx, view_punishments, # => actual view idx and the sequence idx 
                 pre_similarity_texture_cache, exist_texture,
                 xray_mesh_selected, faces, new_verts_uvs,
                 args.image_size, args.fragment_k,
@@ -500,10 +502,15 @@ if __name__ == "__main__":
         xray_mesh = XRayMesh(mesh, camera_poses, device=DEVICE, max_hits=args.hits, texture_size=args.uv_size, new_verts_uvs=new_verts_uvs, faces=mesh_faces, texture_init_maps=transformed_texture)
         xray_meshes = xray_mesh.occ_mesh
 
-        similarity_texture_cache = build_similarity_texture_cache_for_all_views(mesh, mesh_faces, new_verts_uvs,
+        # similarity_texture_cache = build_similarity_texture_cache_for_all_views(mesh, mesh_faces, new_verts_uvs,
+        #     dist_list, elev_list, azim_list,
+        #     args.image_size, args.image_size * args.render_simple_factor, args.uv_size, args.fragment_k,
+        #     DEVICE, # hits=args.hits, xray_mesh=mesh
+        # )
+        similarity_texture_cache = build_similarity_texture_cache_for_all_views(xray_meshes, mesh_faces, new_verts_uvs,
             dist_list, elev_list, azim_list,
             args.image_size, args.image_size * args.render_simple_factor, args.uv_size, args.fragment_k,
-            DEVICE, # hits=args.hits, xray_mesh=mesh
+            DEVICE, hits=args.hits, xray_mesh=xray_mesh
         )
         selected_view_ids = []
 
@@ -511,15 +518,10 @@ if __name__ == "__main__":
         start_time = time.time()
         for view_idx in range(args.update_steps):
             print("=> processing view {}...".format(view_idx))
-            # mesh = xray_meshes[0]
-            # faces = xray_mesh.faces_packed()
-            # textures_idx = xray_mesh.visible_texture_map_list[view_idx * args.hits + hit]
-            # vertices_idx = xray_mesh.visible_faces_list[view_idx * args.hits + hit]
-            
             # 2.1. render and build masks
 
             # heuristically select the viewpoints
-            dist, elev, azim, sector, selected_view_ids, view_punishments = select_viewpoint(
+            dist, elev, azim, sector, selected_view_ids, view_punishments, selected_hit = select_viewpoint(
                 selected_view_ids, view_punishments,
                 args.update_mode, dist_list, elev_list, azim_list, sector_list, view_idx,
                 similarity_texture_cache, exist_texture,
@@ -529,6 +531,8 @@ if __name__ == "__main__":
                 DEVICE, False
             )
 
+            xray_mesh_selected = xray_meshes[selected_view_ids[-1] * args.hits + selected_hit]
+            textures_idx = xray_mesh.visible_texture_map_list[view_idx * args.hits + hit]
             (
                 view_score,
                 renderer, cameras, fragments,
@@ -537,9 +541,9 @@ if __name__ == "__main__":
                 old_mask_image, update_mask_image, generate_mask_image, 
                 old_mask_tensor, update_mask_tensor, generate_mask_tensor, all_mask_tensor, quad_mask_tensor,
             ) = render_one_view_and_build_masks(dist, elev, azim, 
-                selected_view_ids[-1], view_idx, view_punishments, # => actual view idx and the sequence idx 
+                selected_view_ids[-1]*args.hits+selected_hit, view_idx, view_punishments, # => actual view idx and the sequence idx 
                 similarity_texture_cache, exist_texture,
-                mesh, mesh_faces, new_verts_uvs,
+                xray_mesh_selected, mesh_faces, new_verts_uvs,
                 args.image_size, args.fragment_k,
                 init_image_dir, mask_image_dir, normal_map_dir, depth_map_dir, similarity_map_dir,
                 DEVICE, save_intermediate=True, smooth_mask=args.smooth_mask, view_threshold=args.view_threshold
@@ -623,25 +627,32 @@ if __name__ == "__main__":
             # 2.3. back-project and create texture
             # NOTE projection mask = update mask
             init_texture, project_mask_image, exist_texture = backproject_from_image(
-                mesh, mesh_faces, new_verts_uvs, cameras, 
+                xray_mesh_selected, mesh_faces, new_verts_uvs, cameras, 
                 update_image, update_mask_image, update_mask_image, init_texture, exist_texture, 
                 args.image_size * args.render_simple_factor, args.uv_size, args.fragment_k,
-                DEVICE
+                DEVICE, textures_idx
             )
 
-            project_mask_image.save(os.path.join(mask_image_dir, "{}_project.png".format(view_idx)))
+            project_mask_image.save(os.path.join(mask_image_dir, "{}_{}_project.png".format(view_idx, selected_hit)))
 
             # update the mesh
+            transformed_texture = transforms.ToTensor()(init_texture)[None, ...].permute(0, 2, 3, 1).to(DEVICE)
+            expanded_texture_init_maps = transformed_texture.repeat(NUM_PRINCIPLE * args.hits, 1, 1, 1)
             mesh.textures = TexturesUV(
-                maps=transforms.ToTensor()(init_texture)[None, ...].permute(0, 2, 3, 1).to(DEVICE),
+                maps=transformed_texture,
                 faces_uvs=mesh_faces.textures_idx[None, ...],
                 verts_uvs=new_verts_uvs[None, ...]
+            )
+            xray_mesh.textures = TexturesUV(
+                maps=expanded_texture_init_maps,
+                faces_uvs=xray_mesh.visible_texture_map_list,
+                verts_uvs=[new_verts_uvs] * len(dist_list) * args.hits
             )
 
             # 2.4. save generated assets
             # save backprojected OBJ file            
             save_backproject_obj(
-                mesh_dir, "{}.obj".format(view_idx),
+                mesh_dir, "{}_{}.obj".format(view_idx, selected_hit),
                 mesh_scale * mesh.verts_packed() + mesh_center if args.use_unnormalized else mesh.verts_packed(),
                 mesh_faces.verts_idx, new_verts_uvs, mesh_faces.textures_idx, init_texture, 
                 DEVICE
@@ -652,12 +663,12 @@ if __name__ == "__main__":
             inter_image = inter_images_tensor[0].cpu()
             inter_image = inter_image.permute(2, 0, 1)
             inter_image = transforms.ToPILImage()(inter_image).convert("RGB")
-            inter_image.save(os.path.join(interm_dir, "{}.png".format(view_idx)))
+            inter_image.save(os.path.join(interm_dir, "{}_{}.png".format(view_idx, selected_hit)))
 
             # save texture mask
             exist_texture_image = exist_texture * 255. 
             exist_texture_image = Image.fromarray(exist_texture_image.cpu().numpy().astype(np.uint8)).convert("L")
-            exist_texture_image.save(os.path.join(mesh_dir, "{}_texture_mask.png".format(view_idx)))
+            exist_texture_image.save(os.path.join(mesh_dir, "{}_{}_texture_mask.png".format(view_idx, selected_hit)))
 
         print("=> total update time: {} s".format(time.time() - start_time))
 
