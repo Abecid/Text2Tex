@@ -22,6 +22,9 @@ def process_results(results_path):
     """
     for file_name in os.listdir(results_path):
         if file_name.endswith('.obj'):
+            # check if glb file does not already exist
+            if file_name.endswith('.glb'):
+                continue
             obj_file_path = os.path.join(results_path, file_name)
             glb_file_path = os.path.splitext(obj_file_path)[0] + '.glb'
             save_mesh_as_glb(obj_file_path, glb_file_path)
