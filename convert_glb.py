@@ -2,6 +2,7 @@ import os
 import subprocess
 
 base_path = 'outputs_server/backpack'
+base_path = 'outputs_server'
 
 def save_mesh_as_glb(mesh_path, file_path):
     """
@@ -26,18 +27,22 @@ def process_results(results_path):
             save_mesh_as_glb(obj_file_path, glb_file_path)
 
 def main():
-    for mesh_folder in os.listdir(base_path):
-        mesh_folder_path = os.path.join(base_path, mesh_folder)
-        generate_folder_path = os.path.join(mesh_folder_path, 'generate')
-        update_folder_path = os.path.join(mesh_folder_path, 'update')
-        
-        generate_mesh_folder_path = os.path.join(generate_folder_path, 'mesh')
-        update_mesh_folder_path = os.path.join(update_folder_path, 'mesh')
-        
-        if os.path.isdir(generate_mesh_folder_path):
-            process_results(generate_mesh_folder_path)
-        if os.path.isdir(update_mesh_folder_path):
-            process_results(update_mesh_folder_path)
+    for mesh_root_folder in os.listdir(base_path):
+        outputs_folder_path = os.path.join(base_path, mesh_root_folder, 'outputs')
+        if not os.path.isdir(outputs_folder_path):
+            continue
+        for mesh_folder in os.listdir(outputs_folder_path):
+            mesh_folder_path = os.path.join(outputs_folder_path, mesh_folder)
+            generate_folder_path = os.path.join(mesh_folder_path, 'generate')
+            update_folder_path = os.path.join(mesh_folder_path, 'update')
+            
+            generate_mesh_folder_path = os.path.join(generate_folder_path, 'mesh')
+            update_mesh_folder_path = os.path.join(update_folder_path, 'mesh')
+            
+            if os.path.isdir(generate_mesh_folder_path):
+                process_results(generate_mesh_folder_path)
+            if os.path.isdir(update_mesh_folder_path):
+                process_results(update_mesh_folder_path)
 
 if __name__ == "__main__":
     main()
