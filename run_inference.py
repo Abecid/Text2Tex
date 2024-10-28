@@ -46,7 +46,9 @@ def main():
         f"--hits {max_hits} "
     )
     
-    
+    # Run the command
+    print(f"Running command: {command}")
+    subprocess.run(command, shell=True)
     
 if __name__ == "__main__":
     main()
