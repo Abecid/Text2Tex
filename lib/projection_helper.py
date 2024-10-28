@@ -310,7 +310,9 @@ def build_similarity_texture_cache_for_all_views(meshes, faces, verts_uvs,
     ):
 
     num_candidate_views = len(dist_list*hits)
-    similarity_texture_cache = torch.zeros(num_candidate_views*hits, uv_size, uv_size).to(device)
+    similarity_texture_cache = torch.zeros(num_candidate_views, uv_size, uv_size).to(device)
+    
+    print(f"Number of Meshes: {len(meshes)}")
 
     print("=> building similarity texture cache for all views...")
     for i in tqdm(range(num_candidate_views)):
