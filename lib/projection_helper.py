@@ -125,7 +125,7 @@ def select_viewpoint(selected_view_ids, view_punishments,
                     view_heat_list.append(view_heat.item())
 
             print(view_heat_list)
-            print("select view {} with heat {}".format(selected_view_idx, max_heat))
+            print("select view {}, hit {} with heat {}".format(selected_view_idx, selected_hit, max_heat))
 
  
         dist = dist_list[selected_view_idx]

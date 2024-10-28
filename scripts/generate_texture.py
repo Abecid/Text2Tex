@@ -546,7 +546,8 @@ if __name__ == "__main__":
                 xray_mesh_selected, mesh_faces, new_verts_uvs,
                 args.image_size, args.fragment_k,
                 init_image_dir, mask_image_dir, normal_map_dir, depth_map_dir, similarity_map_dir,
-                DEVICE, save_intermediate=True, smooth_mask=args.smooth_mask, view_threshold=args.view_threshold
+                DEVICE, save_intermediate=True, smooth_mask=args.smooth_mask, view_threshold=args.view_threshold,
+                textures_idx=textures_idx, hit=selected_hit
             )
 
             # # -------------------- OPTION ZONE ------------------------
