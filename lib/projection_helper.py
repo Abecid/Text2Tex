@@ -332,7 +332,7 @@ def build_similarity_texture_cache_for_all_views(meshes, faces, verts_uvs,
                 dist_list[i], elev_list[i], azim_list[i],
                 image_size, faces_per_pixel, device)
 
-            similarity_texture_cache[i] = build_backproject_mask(mesh, faces, verts_uvs, 
+            similarity_texture_cache[i*hits+j] = build_backproject_mask(mesh, faces, verts_uvs, 
                 cameras, transforms.ToPILImage()(similarity_tensor[0, :, :, 0]).convert("RGB"), faces_per_pixel,
                 image_size_scaled, uv_size, device, textures_idx=textures_idx)
 
